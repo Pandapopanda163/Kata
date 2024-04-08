@@ -8,123 +8,109 @@ import (
 	"strings"
 )
 
-func romanToArabic(roman string) int {
-	switch roman {
-	case "I":
-		return 1
-	case "II":
-		return 2
-	case "III":
-		return 3
-	case "IV":
-		return 4
-	case "V":
-		return 5
-	case "VI":
-		return 6
-	case "VII":
-		return 7
-	case "VIII":
-		return 8
-	case "IX":
-		return 9
-	case "X":
-		return 10
-	default:
-		return -1
+func main() {
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		input := strings.Split(scanner.Text(), " ")
+		if input[0] == "exit" {
+			break
+		}
+		if len(input) == 3 {
+			switch {
+			case isValidRomanChar(input[0]) && isValidRomanChar(input[2]):
+				num1 := romanValue(input[0])
+				num2 := romanValue(input[2])
+				value := calculator(num1, num2, input[1])
+				fmt.Println(valuesRoman(value))
+				continue
+			case !(isValidRomanChar(input[0]) || isValidRomanChar(input[2])):
+				num1, _ := strconv.Atoi(input[0])
+				num2, _ := strconv.Atoi(input[2])
+				value := calculator(num1, num2, input[1])
+				fmt.Println(value)
+				continue
+			default:
+				panic("Работать с арабскими и римскими цифрами вместе, пока не могу")
+			}
+		} else {
+			panic("Ввод с пробелами!")
+		}
+
 	}
 }
 
-func arabicToRoman(arabic int) string {
-	if arabic <= 0 || arabic > 100 {
-		fmt.Println("Римские цифры не могут быть меньше 1")
+func calculator(num1 int, num2 int, sign string) int {
+	if !(0 < num1 && num1 < 11) || !(0 < num2 && num2 < 11) {
+		panic("Числа должны быть в диапозоне от 1 до 10 включительно!")
 	}
+	switch sign {
+	case "+":
+		//fmt.Println(num1 + num2)
+		return num1 + num2
+	case "-":
+		//fmt.Println(num1 - num2)
+		return num1 - num2
+	case "*":
+		//fmt.Println(num1 * num2)
+		return num1 * num2
+	case "/":
+		return num1 / num2
+	default:
+		panic("Неверная операция!")
+	}
+}
 
-	var romanNumerals = []struct {
-		Value  int
-		Symbol string
+func isValidRomanChar(chars string) bool {
+	for _, char := range chars {
+		if !strings.Contains("IVX", string(char)) {
+			return false
+		}
+	}
+	return true
+}
+
+func romanValue(chars string) int {
+	result := 0
+	if chars == "IV" {
+		return 4
+	}
+	if chars == "IX" {
+		return 9
+	}
+	for _, char := range chars {
+		switch char {
+		case 'I':
+			result += 1
+		case 'V':
+			result += 5
+		case 'X':
+			result += 10
+		}
+	}
+	return result
+}
+
+func valuesRoman(n int) string {
+	result := ""
+	if n < 1 {
+		panic("Число может быть только положительным")
+	}
+	for _, numeral := range []struct {
+		value  int
+		symbol string
 	}{
 		{100, "C"},
-		{90, "XC"},
 		{50, "L"},
-		{40, "XL"},
 		{10, "X"},
 		{9, "IX"},
 		{5, "V"},
 		{4, "IV"},
 		{1, "I"},
-	}
-
-	roman := ""
-
-	for _, numeral := range romanNumerals {
-		for arabic >= numeral.Value {
-			roman += numeral.Symbol
-			arabic -= numeral.Value
+	} {
+		for n >= numeral.value {
+			result += numeral.symbol
+			n -= numeral.value
 		}
 	}
-
-	return roman
-}
-
-var result int
-var usedRomanToArabic bool
-
-func main() {
-	fmt.Println("Введите операцию")
-
-	reader := bufio.NewReader(os.Stdin)
-	input, _ := reader.ReadString('\n')
-	input = strings.TrimSpace(input)
-
-	elements := strings.Fields(input)
-
-	if len(elements) != 3 {
-		fmt.Println("Неверный формат выражения")
-		return
-	}
-
-	a := elements[0]
-	operator := elements[1]
-	b := elements[2]
-
-	numA, errA := strconv.Atoi(a)
-	numB, errB := strconv.Atoi(b)
-
-	if errA != nil && errB != nil {
-		numA = romanToArabic(a)
-		numB = romanToArabic(b)
-		usedRomanToArabic = true
-	} else if errA != nil || errB != nil {
-		fmt.Println("Оба значения должны быть одинаковой формы исчисления")
-		return
-	}
-
-	if numA < 1 || numA > 10 || numB < 1 || numB > 10 {
-		fmt.Println("Можно ввести только числа от 1 до 10 включительно")
-		return
-	}
-
-	switch operator {
-	case "+":
-		result = numA + numB
-	case "-":
-		result = numA - numB
-	case "*":
-		result = numA * numB
-	case "/":
-		if numB == 0 {
-			fmt.Println("делить на 0 нельзя")
-			return
-		}
-		result = numA / numB
-	default:
-		fmt.Println("можно использовать только + - * /")
-		return
-	}
-	if usedRomanToArabic {
-		fmt.Println(arabicToRoman(result))
-	} else {
-		fmt.Println(result)
-	}
+	return result
 }
